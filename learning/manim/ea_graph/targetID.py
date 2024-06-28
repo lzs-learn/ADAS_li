@@ -21,32 +21,34 @@ class RTOutputID(Scene):
                 line = Line(LEFT * 8, RIGHT * 8, stroke_width=5)
             else:
                 line = DashedLine(
-                    LEFT * 8, RIGHT * 8, dash_length=0.6, dashed_ratio=0.5, stroke_width=3)
-            line.shift(UP * (2.5-i) * lane_width)
+                    LEFT * 8,
+                    RIGHT * 8,
+                    dash_length=0.6,
+                    dashed_ratio=0.5,
+                    stroke_width=3,
+                )
+            line.shift(UP * (2.5 - i) * lane_width)
             self.add(line)
 
         # add text of lane name
-        lane_name = ("host_lane", "left_lane", "right_lane",
-                     "n_left_lane", "n_right_lane")
-        for i in range(len(lane_name)):
-            text = Text(lane_name[i], font_size=18.0,
-                        color=WHITE, stroke_width=0)
+        lane_name = (
+            "host_lane",
+            "left_lane",
+            "right_lane",
+            "n_left_lane",
+            "n_right_lane",
+        )
+        for name in lane_name:
+            text = Text(name, font_size=18.0, color=WHITE, stroke_width=0)
             text.to_edge(LEFT, buff=0.1)
-            text.shift(UP * (2-i) * lane_width)
+            text.shift(UP * (2 - lane_name.index(name)) * lane_width)
             self.add(text)
 
-        # fill_color="blue_c", fill_opacity=1.0
+        # add ego
         ego_length = 1.25
         ego_width = 0.5
         ego_stroke_width = 2.0
         ego_stroke_opacity = 1.0
-
-        radar_length = 0.15
-        radar_width = 0.15
-        radar_stroke_width = 2.0
-        radar_stroke_opacity = 1.0
-        radar_text_buff = 0.12
-        radar_font_size = 16.0
 
         ego = Rectangle(
             height=ego_width,
@@ -58,6 +60,9 @@ class RTOutputID(Scene):
         ego_text = Text("ego", fill_opacity=1.0, stroke_width=0, font_size=24.0).shift(
             LEFT, DOWN * 0.04
         )
+        self.add(ego, ego_text)
+
+        # add edge
         edge = DashedLine(
             DOWN * (half_lane_width + 2 * lane_width),
             UP * (half_lane_width + 2 * lane_width),
@@ -66,168 +71,145 @@ class RTOutputID(Scene):
             dash_length=0.15,
             dashed_ratio=0.6,
         ).shift(LEFT * (1.0 - ego_length / 2))
+        self.add(edge)
 
         # add front targets
-        # front_gargets_num = 8
-        # front_targets = []
-        # for i in range(front_gargets_num):
-        #     if i < 2:
-        #         set_color = "green_b"
-        #     elif i < 6:
-        #         set_color = "yellow_b"
-        #     else:
-        #         set_color = "purple_b"
-        #     rt = Rectangle(height=ego_width, width=ego_length, color=set_color,
-        #                    stroke_width=ego_stroke_width, stroke_opacity=ego_stroke_opacity)
-        #     front_targets.append(rt)
-
-        rt1 = Rectangle(
-            height=ego_width,
-            width=ego_length,
-            color="green_b",
-            stroke_width=ego_stroke_width,
-            stroke_opacity=ego_stroke_opacity,
-        ).next_to(ego, RIGHT * 3.5)
-        rt2 = Rectangle(
-            height=ego_width,
-            width=ego_length,
-            color="green_b",
-            stroke_width=ego_stroke_width,
-            stroke_opacity=ego_stroke_opacity,
-        ).shift(RIGHT * 4.5)
-        rt3 = Rectangle(
-            height=ego_width,
-            width=ego_length,
-            color="yellow_b",
-            stroke_width=ego_stroke_width,
-            stroke_opacity=ego_stroke_opacity,
-        ).shift(RIGHT * 1.5, UP * lane_width)
-        rt4 = Rectangle(
-            height=ego_width,
-            width=ego_length,
-            color="yellow_b",
-            stroke_width=ego_stroke_width,
-            stroke_opacity=ego_stroke_opacity,
-        ).shift(RIGHT * 1.5, DOWN * lane_width)
-        rt5 = Rectangle(
-            height=ego_width,
-            width=ego_length,
-            color="yellow_b",
-            stroke_width=ego_stroke_width,
-            stroke_opacity=ego_stroke_opacity,
-        ).shift(RIGHT * 4.0, UP * lane_width)
-        rt6 = Rectangle(
-            height=ego_width,
-            width=ego_length,
-            color="yellow_b",
-            stroke_width=ego_stroke_width,
-            stroke_opacity=ego_stroke_opacity,
-        ).shift(RIGHT * 4.5, DOWN * lane_width)
-        rt12 = Rectangle(
-            height=ego_width,
-            width=ego_length,
-            color="purple_b",
-            stroke_width=ego_stroke_width,
-            stroke_opacity=ego_stroke_opacity,
-        ).shift(RIGHT * 2.0, UP * (2 * lane_width))
-        rt13 = Rectangle(
-            height=ego_width,
-            width=ego_length,
-            color="purple_b",
-            stroke_width=ego_stroke_width,
-            stroke_opacity=ego_stroke_opacity,
-        ).shift(RIGHT * 1.5, DOWN * (2 * lane_width))
-
-        self.add(rt1, rt2)
-        self.add(rt3, rt4)
-        self.add(rt5, rt6, rt12, rt13)
-
-        front_targets = [rt1, rt2, rt3, rt4, rt5, rt6, rt12, rt13]
-        for i in range(len(front_targets)):
-            if i == 6 or i == 7:
-                rt_name = "RT" + str(i + 6)
+        front_gargets_num = 8
+        front_targets = []
+        front_gargets_pos = (
+            RIGHT * 1.2,
+            RIGHT * 5.0,
+            UP * lane_width + RIGHT * 1.5,
+            DOWN * lane_width + RIGHT * 2.0,
+            UP * lane_width + RIGHT * 4.0,
+            DOWN * lane_width + RIGHT * 4.5,
+            UP * (2 * lane_width) + RIGHT * 3.5,
+            DOWN * (2 * lane_width) + RIGHT * 1.5,
+        )
+        for i in range(front_gargets_num):
+            if i in [0, 1]:
+                set_color = "green_b"
+            elif i in [2, 3, 4, 5]:
+                set_color = "yellow_b"
             else:
-                rt_name = "RT" + str(i + 1)
-            set_color = front_targets[i].get_color()
-            text = Text(rt_name, color=set_color, fill_opacity=1.0,
-                        stroke_width=0, font_size=18.0)
-            text.move_to(front_targets[i].get_center())
+                set_color = "purple_b"
+            rt = Rectangle(
+                height=ego_width,
+                width=ego_length,
+                color=set_color,
+                stroke_width=ego_stroke_width,
+                stroke_opacity=ego_stroke_opacity,
+            ).shift(front_gargets_pos[i])
+            head = Line(
+                rt.get_center(),
+                rt.get_right(),
+                color=rt.get_color(),
+                stroke_width=rt.stroke_width - 0.5,
+            )
+            front_targets.append(rt)
+            self.add(rt, head)
+
+        for rt in front_targets:
+            if front_targets.index(rt) in [6, 7]:
+                rt_name = "RT" + str(front_targets.index(rt) + 6)
+            else:
+                rt_name = "RT" + str(front_targets.index(rt) + 1)
+            set_color = rt.get_color()
+            text = Text(
+                rt_name,
+                color=set_color,
+                fill_opacity=1.0,
+                stroke_width=0,
+                font_size=18.0,
+            )
+            text.move_to(rt.get_center())
             self.add(text)
 
         # rear target
-        rt7 = Rectangle(
-            height=radar_length,
-            width=radar_width,
-            color="gold_b",
+        radar_size = 0.07
+        radar_stroke_width = 2.5
+        radar_stroke_opacity = 1.0
+        radar_text_buff = 0.12
+        radar_text_font_size = 16.0
+
+        rear_gargets_num = 7
+        rear_targets = []
+        rear_gargets_pos = (
+            LEFT * 3.5,
+            UP * lane_width + LEFT * 2.0,
+            DOWN * lane_width + LEFT,
+            UP * lane_width + LEFT * 3.5,
+            DOWN * lane_width + LEFT * 4.0,
+            UP * (2 * lane_width) + LEFT * 2.5,
+            DOWN * (2 * lane_width) + LEFT * 2.5,
+        )
+        for i in range(rear_gargets_num):
+            if i == 0:
+                set_color = "gold_b"
+            elif i in [1, 2, 3, 4]:
+                set_color = "maroon_b"
+            else:
+                set_color = "purple_b"
+            rt = Circle(
+                radius=radar_size,
+                color=set_color,
+                stroke_width=radar_stroke_width,
+                stroke_opacity=radar_stroke_opacity,
+            ).shift(rear_gargets_pos[i])
+            rear_targets.append(rt)
+            self.add(rt)
+
+        for rt in rear_targets:
+            if rear_targets.index(rt) in [5, 6]:
+                rt_name = "RT" + str(rear_targets.index(rt) + 9)
+            else:
+                rt_name = "RT" + str(rear_targets.index(rt) + 7)
+            set_color = rt.get_color()
+            text = Text(
+                rt_name,
+                color=set_color,
+                fill_opacity=1.0,
+                stroke_width=0,
+                font_size=radar_text_font_size,
+            )
+            text.next_to(rt, DOWN, buff=radar_text_buff)
+            self.add(text)
+
+        # add label
+        label_vision = (
+            Rectangle(
+                height=0.3,
+                width=0.75,
+                stroke_width=ego_stroke_width,
+                stroke_opacity=ego_stroke_opacity,
+            )
+            .to_edge(DOWN, buff=0.7)
+            .to_edge(RIGHT, buff=1.5)
+        )
+        vision_head = Line(
+            label_vision.get_center(),
+            label_vision.get_right(),
+            color=label_vision.get_color(),
+            stroke_width=label_vision.stroke_width - 0.5,
+        )
+        label_vision_text = Text(
+            " : vision",
+            fill_opacity=1.0,
+            stroke_width=0,
+            font_size=18.0,
+        ).next_to(label_vision, RIGHT, buff=0.2)
+        self.add(label_vision, vision_head, label_vision_text)
+
+        label_radar = Circle(
+            radius=radar_size,
+            color=WHITE,
             stroke_width=radar_stroke_width,
             stroke_opacity=radar_stroke_opacity,
-        ).shift(LEFT * 3.5)
-        rt7_text = Text(
-            "RT7", color="gold_b", fill_opacity=1.0, stroke_width=0, font_size=radar_font_size
-        ).next_to(rt7, DOWN, buff=radar_text_buff)
-        rt8 = Rectangle(
-            height=radar_length,
-            width=radar_width,
-            color="maroon_b",
-            stroke_width=radar_stroke_width,
-            stroke_opacity=radar_stroke_opacity,
-        ).shift(LEFT * 2.0, UP * lane_width)
-        rt8_text = Text(
-            "RT8", color="maroon_b", fill_opacity=1.0, stroke_width=0, font_size=radar_font_size
-        ).next_to(rt8, DOWN, buff=radar_text_buff)
-        rt9 = Rectangle(
-            height=radar_length,
-            width=radar_width,
-            color="maroon_b",
-            stroke_width=radar_stroke_width,
-            stroke_opacity=radar_stroke_opacity,
-        ).shift(LEFT, DOWN * lane_width)
-        rt9_text = Text(
-            "RT9", color="maroon_b", fill_opacity=1.0, stroke_width=0, font_size=radar_font_size
-        ).next_to(rt9, DOWN, buff=radar_text_buff)
-        rt10 = Rectangle(
-            height=radar_length,
-            width=radar_width,
-            color="maroon_b",
-            stroke_width=radar_stroke_width,
-            stroke_opacity=radar_stroke_opacity,
-        ).shift(LEFT * 3.5, UP * lane_width)
-        rt10_text = Text(
-            "RT10", color="maroon_b", fill_opacity=1.0, stroke_width=0, font_size=radar_font_size
-        ).next_to(rt10, DOWN, buff=radar_text_buff)
-        rt11 = Rectangle(
-            height=radar_length,
-            width=radar_width,
-            color="maroon_b",
-            stroke_width=radar_stroke_width,
-            stroke_opacity=radar_stroke_opacity,
-        ).shift(LEFT * 4.0, DOWN * lane_width)
-        rt11_text = Text(
-            "RT11", color="maroon_b", fill_opacity=1.0, stroke_width=0, font_size=radar_font_size
-        ).next_to(rt11, DOWN, buff=radar_text_buff)
-        rt14 = Rectangle(
-            height=radar_length,
-            width=radar_width,
-            color="purple_b",
-            stroke_width=radar_stroke_width,
-            stroke_opacity=radar_stroke_opacity,
-        ).shift(LEFT * 2.5, UP * (2 * lane_width))
-        rt14_text = Text(
-            "RT14", color="purple_b", fill_opacity=1.0, stroke_width=0, font_size=radar_font_size
-        ).next_to(rt14, DOWN, buff=radar_text_buff)
-        rt15 = Rectangle(
-            height=radar_length,
-            width=radar_width,
-            color="purple_b",
-            stroke_width=radar_stroke_width,
-            stroke_opacity=radar_stroke_opacity,
-        ).shift(LEFT * 2.5, DOWN * (2 * lane_width))
-        rt15_text = Text(
-            "RT15", color="purple_b", fill_opacity=1.0, stroke_width=0, font_size=radar_font_size
-        ).next_to(rt15, DOWN, buff=radar_text_buff)
-        self.add(ego, ego_text)
-        self.add(edge)
-        self.add(rt7, rt7_text)
-        self.add(rt8, rt9, rt10, rt11, rt8_text,
-                 rt9_text, rt10_text, rt11_text)
-        self.add(rt14, rt15, rt14_text, rt15_text)
+        ).next_to(label_vision, DOWN, buff=0.2)
+        label_radar_text = Text(
+            " : radar",
+            fill_opacity=1.0,
+            stroke_width=0,
+            font_size=18.0,
+        ).next_to(label_vision_text, DOWN, buff=0.2, aligned_edge=LEFT)
+        self.add(label_radar, label_radar_text)
